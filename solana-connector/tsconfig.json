@@ -1,0 +1,3 @@
+{
+  "extends": "@qstn/config/react.tsconfig.json"
+}
