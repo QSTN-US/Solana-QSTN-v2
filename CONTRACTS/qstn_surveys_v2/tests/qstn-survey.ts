@@ -70,6 +70,30 @@ describe("Basic cases", () => {
     assert.isTrue(acc.owner.equals(owner.publicKey));
   });
 
+  it("Should register participant", async () => {
+    await airdrop(controller.publicKey, 5);
+    
+    let participantAccount = anchor.web3.Keypair.generate().publicKey;
+
+    let [participation,] = anchor.web3.PublicKey.findProgramAddressSync(
+      [
+        participantAccount.toBuffer(),
+      ], program.programId);
+
+    const tx = await program.methods
+      .registerParticipant("zkp-proof")
+      .accounts({
+        surveyAccount: surveyAccount,
+        participantAddress: participantAccount,
+        participation: participation,
+        owner: owner.publicKey,
+        caller: controller.publicKey,
+        systemProgram: anchor.web3.SystemProgram.programId,
+      })
+      .signers([controller])
+      .rpc();
+  })
+
   it("Should fund the survey", async () => {
     const amount = 5 * anchor.web3.LAMPORTS_PER_SOL;
     let balance = await provider.connection.getBalance(fundingAccount);
@@ -95,13 +119,32 @@ describe("Basic cases", () => {
     let balance = await provider.connection.getBalance(surveyUser.publicKey);
     assert.equal(balance, 0);
 
+    let [participation,] = anchor.web3.PublicKey.findProgramAddressSync(
+      [
+        surveyUser.publicKey.toBuffer(),
+      ], program.programId);
+
+    await program.methods
+      .registerParticipant("zkp-proof")
+      .accounts({
+        surveyAccount: surveyAccount,
+        participantAddress: surveyUser.publicKey,
+        participation: participation,
+        owner: owner.publicKey,
+        caller: controller.publicKey,
+        systemProgram: anchor.web3.SystemProgram.programId,
+      })
+      .signers([controller])
+      .rpc();
+
     const tx = await program.methods
       .payout(new anchor.BN(123_000_000))
       .accounts({
         surveyAccount: surveyAccount,
         fundingAccount: fundingAccount,
+        participantAddress: surveyUser.publicKey,
+        participation: participation,
         owner: owner.publicKey,
-        toAccount: surveyUser.publicKey,
         caller: controller.publicKey,
         systemProgram: anchor.web3.SystemProgram.programId,
       })
@@ -150,6 +193,7 @@ describe("Basic cases", () => {
 
   it("Should change controller", async () => {
     const newController = anchor.web3.Keypair.generate();
+    await airdrop(newController.publicKey, 10);
 
     await program.methods
       .changeController(newController.publicKey)
@@ -166,24 +210,57 @@ describe("Basic cases", () => {
     // Test payout with old controller
     const surveyUser = anchor.web3.Keypair.generate();
 
+    let [participation,] = anchor.web3.PublicKey.findProgramAddressSync(
+      [
+        surveyUser.publicKey.toBuffer(),
+      ], program.programId);
+
     try {
-      const tx = await program.methods
-        .payout(new anchor.BN(123_000_000))
+      await program.methods
+        .registerParticipant("zkp-proof")
         .accounts({
           surveyAccount: surveyAccount,
-          fundingAccount: fundingAccount,
+          participantAddress: surveyUser.publicKey,
+          participation: participation,
           owner: owner.publicKey,
-          toAccount: surveyUser.publicKey,
           caller: controller.publicKey,
           systemProgram: anchor.web3.SystemProgram.programId,
         })
         .signers([controller])
         .rpc();
+
+      const tx = await program.methods
+        .payout(new anchor.BN(123_000_000))
+        .accounts({
+          surveyAccount: surveyAccount,
+          fundingAccount: fundingAccount,
+          participantAddress: surveyUser.publicKey,
+          participation: participation,
+          owner: owner.publicKey,
+          caller: controller.publicKey,
+          systemProgram: anchor.web3.SystemProgram.programId,
+        })
+        .signers([controller])
+        .rpc();
+
     } catch (err) {
       expect(err).to.be.instanceOf(anchor.AnchorError)
       expect((err as anchor.AnchorError).error.errorCode.number).to.equal(6000)
       expect((err as anchor.AnchorError).error.errorMessage).to.contains("Caller is not survey controller")
     }
+    
+    await program.methods
+        .registerParticipant("zkp-proof")
+        .accounts({
+          surveyAccount: surveyAccount,
+          participantAddress: surveyUser.publicKey,
+          participation: participation,
+          owner: owner.publicKey,
+          caller: newController.publicKey,
+          systemProgram: anchor.web3.SystemProgram.programId,
+        })
+        .signers([newController])
+        .rpc();
 
     // Test payout new
     const tx = await program.methods
@@ -192,13 +269,14 @@ describe("Basic cases", () => {
         surveyAccount: surveyAccount,
         fundingAccount: fundingAccount,
         owner: owner.publicKey,
-        toAccount: surveyUser.publicKey,
+        participantAddress: surveyUser.publicKey,
+        participation: participation,
         caller: newController.publicKey,
         systemProgram: anchor.web3.SystemProgram.programId,
       })
       .signers([newController])
       .rpc();
-
+      
     let balance = await provider.connection.getBalance(surveyUser.publicKey);
     assert.equal(balance, 123_000_000);
   })

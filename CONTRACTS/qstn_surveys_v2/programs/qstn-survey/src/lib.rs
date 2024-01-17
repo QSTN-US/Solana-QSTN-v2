@@ -59,6 +59,28 @@ pub mod qstn_survey {
         Ok(())
     }
 
+    /// ### `register_participant`
+    ///
+    /// Registers the participant_address as a participant with his zkp claim.
+    ///
+    /// **Parameters:**
+    /// - `ctx`: Context of the transaction.
+    /// - `zkp_claim`: ZKP Claim as a string.
+    ///
+    pub fn register_participant(ctx: Context<RegisterParticipant>, zkp_claim: String) -> Result<()> {
+        let caller = &ctx.accounts.caller;
+
+        if caller.key.ne(&ctx.accounts.survey_account.controller) {
+            return err!(SurveyErrors::WrongController);
+        }
+
+        let acc = &mut ctx.accounts.participation;
+
+        acc.zkp = zkp_claim;
+
+        Ok(())
+    }
+
     /// ### `payout`
     ///
     /// Pays out rewards from the survey's funding account to the specified account. It uses a signed transfer instruction.
@@ -76,7 +98,7 @@ pub mod qstn_survey {
         }
 
         let from_account = &mut ctx.accounts.funding_account;  
-        let to_account = &mut ctx.accounts.to_account;
+        let to_account = &mut ctx.accounts.participant_address;
 
         let transfer_instruction = system_instruction::transfer(
             &from_account.key(),
@@ -182,6 +204,46 @@ pub struct FundSurvey<'info> {
     pub system_program: Program<'info, System>,
 }
 
+/// ### `RegisterParticipant`
+///
+/// - `survey_account`: Survey account.
+/// - `participation`: User's participation in the survey.
+/// - `participant_address`: Address of the participant
+/// - `caller`: Signer account representing the caller.
+/// - `owner`: Owner of the survey.
+/// - `system_program`: Solana System program.
+///
+#[derive(Accounts)]
+pub struct RegisterParticipant<'info> {
+    #[account(
+        mut,
+        seeds=[
+            SURVEY_SEED,
+            owner.key().as_ref(),
+            &survey_account.survey_id.to_le_bytes(),
+        ],
+        bump
+    )]
+    pub survey_account: Account<'info, Survey>,
+    #[account(
+        init,
+        payer = caller,
+        space = 8 + Participation::INIT_SPACE,
+        seeds=[
+            participant_address.key().as_ref(),
+        ],
+        bump
+    )]
+    pub participation: Account<'info, Participation>,
+    /// CHECK: 
+    pub participant_address: AccountInfo<'info>,
+    #[account(mut, signer)]
+    pub caller: Signer<'info>,
+    #[account(mut)]
+    pub owner: SystemAccount<'info>,
+    pub system_program: Program<'info, System>,
+}
+
 /// ### `PayoutReward`
 ///
 /// - `survey_account`: Survey account.
@@ -211,13 +273,20 @@ pub struct PayoutReward<'info> {
         bump
     )]
     pub funding_account: SystemAccount<'info>,
+    #[account(
+        seeds=[
+            participant_address.key().as_ref(),
+        ],
+        bump
+    )]
+    pub participation: Account<'info, Participation>,
+    /// CHECK: participant address for payout
+    #[account(mut)]
+    pub participant_address: AccountInfo<'info>,
     /// CHECK: owner account
     pub owner: AccountInfo<'info>,
     #[account(mut, signer)]
     pub caller: Signer<'info>,
-    /// CHECK: Transfer SOL
-    #[account(mut)]
-    pub to_account: AccountInfo<'info>,
     pub system_program: Program<'info, System>,
 }
 
@@ -253,6 +322,17 @@ pub struct Survey {
     pub survey_id: u64,
     pub owner: Pubkey,
     pub controller: Pubkey,
+}
+
+/// ### Participation
+///
+/// - `zkp`: ZKP Claim of the survey user.
+///
+#[account]
+#[derive(InitSpace)]
+pub struct Participation {
+    #[max_len(128)]
+    pub zkp: String,
 }
 
 #[error_code]
