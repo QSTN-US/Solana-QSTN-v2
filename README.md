@@ -27,9 +27,11 @@ Support
 License
 
 **Introduction**
+
 QSTN provides a decentralized solution for businesses to fund surveys using smart contracts on the Solana blockchain. This guide explains how to set up, deploy, and interact with the QSTN survey smart contracts.
 
 **Prerequisites**
+
 Before you begin, ensure you have the following:
 
 Rust: The smart contracts are written in Rust. You need to have Rust installed on your system. You can download it from here.
@@ -37,6 +39,7 @@ Solana CLI: Install the Solana command line tools. Follow the instructions here.
 Node.js and NPM: Required for running the frontend example. Install it from here.
 
 **Installation**
+
 Clone the repository and navigate to the contracts directory:
 
 bash
@@ -45,6 +48,7 @@ git clone https://github.com/QSTN-US/Solana-QSTN-v2.git
 cd Solana-QSTN-v2/CONTRACTS/qstn-survey-native
 
 **Contract Overview**
+
 This repository contains smart contracts designed for creating and funding surveys. Key components include:
 
 survey_contract.rs: Main contract for creating and managing surveys.
@@ -60,6 +64,7 @@ The funding_contract.rs contract allows businesses to fund surveys and manage th
 fund_survey(ctx: Context<FundSurvey>, survey_id: u64, amount: u64)
 
 **Deploying the Contracts**
+
 Follow these steps to deploy the contracts on the Solana blockchain:
 
 Compile the Contracts:
@@ -84,6 +89,7 @@ Copy code
 solana program invoke ...
 
 **Using the Contracts**
+
 Creating a Survey
 Call the create_survey function on the survey_contract.rs contract to create a new survey.
 
@@ -110,6 +116,7 @@ pub fn respond_to_survey(ctx: Context<RespondToSurvey>, survey_id: u64, response
 }
 
 **Examples**
+
 Creating and Funding a Survey
 Here’s an example of creating and funding a survey using the Rust SDK:
 
@@ -130,10 +137,13 @@ Copy code
 survey_contract::respond_to_survey(ctx, survey_id, "Survey Response".to_string())?;
 
 **Contributing**
+
 We welcome contributions! Please read our contributing guide to get started.
 
 **Support**
+
 If you encounter any issues or have questions, please open an issue on GitHub or contact our support team at support@qstn.us.
 
 **License**
+
 This project is licensed under the MIT License. See the LICENSE file for details.
