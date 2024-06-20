@@ -38,11 +38,13 @@ To run, test, or deploy this smart contract, make sure you have everything neces
 
 Clone the repository and navigate to the contracts directory:
 
-% git clone https://github.com/QSTN-US/Solana-QSTN-v2.git
-% cd Solana-QSTN-v2/CONTRACTS/qstn-survey-native
-% yarn
-% anchor build
-% anchor test
+```bash
+git clone https://github.com/QSTN-US/Solana-QSTN-v2.git
+cd Solana-QSTN-v2/CONTRACTS/qstn-survey-native
+yarn
+anchor build
+anchor test
+```
 
 **Contract Overview**
 
