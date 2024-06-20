@@ -32,109 +32,125 @@ QSTN provides a decentralized solution for businesses to fund surveys using smar
 
 **Prerequisites**
 
-Before you begin, ensure you have the following:
-
-Rust: The smart contracts are written in Rust. You need to have Rust installed on your system. You can download it from here.
-Solana CLI: Install the Solana command line tools. Follow the instructions here.
-Node.js and NPM: Required for running the frontend example. Install it from here.
+To run, test, or deploy this smart contract, make sure you have everything necessary to run the project on Anchor installed. You can find all the necessary instructions for setting up the Anchor environment [here](https://www.anchor-lang.com/docs/installation).
 
 **Installation**
 
 Clone the repository and navigate to the contracts directory:
 
-bash
-Copy code
-git clone https://github.com/QSTN-US/Solana-QSTN-v2.git
-cd Solana-QSTN-v2/CONTRACTS/qstn-survey-native
+% git clone https://github.com/QSTN-US/Solana-QSTN-v2.git
+% cd Solana-QSTN-v2/CONTRACTS/qstn-survey-native
+% yarn
+% anchor build
+% anchor test
 
 **Contract Overview**
 
-This repository contains smart contracts designed for creating and funding surveys. Key components include:
+This repository contains solana program (smart contract) designed for creating and funding surveys. Key components include:
 
-survey_contract.rs: Main contract for creating and managing surveys.
-funding_contract.rs: Handles the funding mechanism for surveys.
-survey_contract.rs
-The survey_contract.rs contract allows users to create surveys, respond to them, and manage survey data. Key functions include:
+lib.rs: Main program for creating and managing surveys.
+qstn-survey.ts: Test cases of survey contract using and security tests.
 
-create_survey(ctx: Context<CreateSurvey>, title: String, description: String)
-respond_to_survey(ctx: Context<RespondToSurvey>, survey_id: u64, response: String)
-funding_contract.rs
-The funding_contract.rs contract allows businesses to fund surveys and manage their funding pools. Key functions include:
+The lib.rs program allows users to create surveys, fund them, and manage survey data. Key functions include:
 
-fund_survey(ctx: Context<FundSurvey>, survey_id: u64, amount: u64)
+```rust
+init_survey(
+ctx: Context<InitSurvey>,
+survey_id: u64,
+survey_uuid: String,
+controller: Pubkey,
+participants_limit: u64,
+reward_amount: u64,
+)
+```
+
+`init_survey` is used to initialize the PDA instance for a new survey. In the ecosystem, this function is called by a business user who creates a new survey.
+
+```rust
+fund_survey(ctx: Context<FundSurvey>, amount: u64, fee: u64)
+```
+
+`fund_survey` is used to fund the newly created survey with native currency, which will be used as a reward for users who take the survey. Additionally, a portion of the funds is allocated as compensation for the manager's expenses to automate the reward payouts to users.
+
+```rust
+payout(ctx: Context<PayoutReward>, zkp_claim: String)
+```
+
+`payout` is used to distribute rewards to a specific user. This function can only be called by the manager. It accepts a ZKP hash to confirm the payout and stores it.
+
+```rust
+emergency_withdraw(ctx: Context<EmergencyWithdraw>)
+```
+
+`emergency_withdraw` is used for the emergency withdrawal of funds from the survey to the wallet of the user who created the survey.
 
 **Deploying the Contracts**
 
 Follow these steps to deploy the contracts on the Solana blockchain:
 
-Compile the Contracts:
-
-bash
-Copy code
-cargo build-bpf
-Deploy the Contracts:
-
-Use the Solana CLI to deploy the contracts. Replace PATH_TO_PROGRAM with the path to your compiled program.
-
-bash
-Copy code
-solana program deploy target/deploy/survey_contract.so
-solana program deploy target/deploy/funding_contract.so
-Initialize the Contracts:
-
-After deployment, initialize the contracts using the provided scripts or manually via the Solana CLI.
-
-bash
-Copy code
-solana program invoke ...
-
-**Using the Contracts**
-
-Creating a Survey
-Call the create_survey function on the survey_contract.rs contract to create a new survey.
-
-rust
-Copy code
-pub fn create_survey(ctx: Context<CreateSurvey>, title: String, description: String) -> ProgramResult {
-    // Implementation
-}
-Funding a Survey
-Use the fund_survey function on the funding_contract.rs contract to fund an existing survey.
-
-rust
-Copy code
-pub fn fund_survey(ctx: Context<FundSurvey>, survey_id: u64, amount: u64) -> ProgramResult {
-    // Implementation
-}
-Responding to a Survey
-Participants can respond to surveys using the respond_to_survey function on the survey_contract.rs contract.
-
-rust
-Copy code
-pub fn respond_to_survey(ctx: Context<RespondToSurvey>, survey_id: u64, response: String) -> ProgramResult {
-    // Implementation
-}
+% anchor build
+% anchor deploy
 
 **Examples**
 
 Creating and Funding a Survey
-Here’s an example of creating and funding a survey using the Rust SDK:
+Here’s an example of creating and funding a survey using the @solana/web3.js:
 
-Create Survey:
+```typescript
+const program = new Program(QstnSurveyIDL as Idl, programId, { connection });
 
-rust
-Copy code
-let survey_id = survey_contract::create_survey(ctx, "Survey Title".to_string(), "Survey Description".to_string())?;
-Fund Survey:
+let [surveyAccount] = await anchor.web3.PublicKey.findProgramAddressSync(
+  [
+    Buffer.from("survey"),
+    userAccount.toBuffer(),
+    new anchor.BN(suid).toArrayLike(Buffer, "le", 8),
+  ],
+  program.programId
+);
 
-rust
-Copy code
-funding_contract::fund_survey(ctx, survey_id, 100)?;
-Respond to Survey:
+let [fundingAccount] = PublicKey.findProgramAddressSync(
+  [Buffer.from("vault"), surveyAccount.toBuffer(), userAccount.toBuffer()],
+  program.programId
+);
+```
 
-rust
-Copy code
-survey_contract::respond_to_survey(ctx, survey_id, "Survey Response".to_string())?;
+```typescript
+const transaction = await program.methods
+  .initSurvey(
+    new anchor.BN(ts),
+    surveyUuid,
+    controller,
+    new anchor.BN(usersAmount),
+    new anchor.BN(rewardAmount)
+  )
+  .accounts({
+    surveyAccount: surveyAccount,
+    fundingAccount: fundingAccount,
+    caller: userAccount,
+    systemProgram: anchor.web3.SystemProgram.programId,
+  })
+  .transaction();
+
+const transactionSignature = await sendTransaction(transaction, connection);
+```
+
+```typescript
+const transaction = await program.methods
+  .fundSurvey(
+    new anchor.BN(rewardAmount * usersAmount),
+    new anchor.BN(feeAmount)
+  )
+  .accounts({
+    surveyAccount: surveyAccount,
+    fundingAccount: fundingAccount,
+    caller: userAccount,
+    controller: controller,
+    systemProgram: anchor.web3.SystemProgram.programId,
+  })
+  .transaction();
+
+const transactionSignature = await sendTransaction(transaction, connection);
+```
 
 **Contributing**
 
@@ -147,3 +163,7 @@ If you encounter any issues or have questions, please open an issue on GitHub or
 **License**
 
 This project is licensed under the MIT License. See the LICENSE file for details.
+
+```
+
+```
