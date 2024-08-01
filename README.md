@@ -10,6 +10,12 @@
 
 Solana empowers builders to unlock human and economic potential. It combines a powerful, decentralized blockchain network with a global ecosystem of innovators to create opportunities as borderless as ideas. It offers the tools to make a difference in the real world through new digital asset products and services that enhance access to the global financial system.
 
+***Business Demo***
+https://drive.google.com/file/d/13xazUCDOVFUpGGrDff0YnXcdu9DXWT8D/view?usp=drive_link
+
+***User Demo*** 
+https://drive.google.com/file/d/1PkL0nq9getU_tvM8L0itXx_k4m2xBoT2/view?usp=drive_link
+
 **QSTN Survey Smart Contracts Documentation**
 
 Welcome to the QSTN Survey Smart Contracts repository. This guide will help you understand how to deploy and use our smart contracts for business funding on the Solana blockchain.
