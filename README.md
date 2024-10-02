@@ -13,10 +13,10 @@ https://qstn.us
 https://testnet.qstnus.com
 
 ***Business Demo***
-https://drive.google.com/file/d/13xazUCDOVFUpGGrDff0YnXcdu9DXWT8D/view?usp=drive_link
+[https://drive.google.com/file/d/13xazUCDOVFUpGGrDff0YnXcdu9DXWT8D/view?usp=drive_link](https://drive.google.com/file/d/1RvteIQxxXUbCIxWuPFjO_FS0tEfSfEPD/view?usp=sharing)
 
 ***User Demo*** 
-https://drive.google.com/file/d/1PkL0nq9getU_tvM8L0itXx_k4m2xBoT2/view?usp=drive_link
+[https://drive.google.com/file/d/1PkL0nq9getU_tvM8L0itXx_k4m2xBoT2/view?usp=drive_link](https://drive.google.com/file/d/19ZXFe4WjdrI80f3wfEwsUmM9K2Gh8r_w/view?usp=sharing)
 
 **QSTN Survey Smart Contracts Documentation**
 
