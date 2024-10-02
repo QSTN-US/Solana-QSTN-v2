@@ -6,8 +6,11 @@
 
 **_🚀 QSTN is a platform that connects businesses and individuals through market research surveys. We partner with companies that are looking for feedback from consumers like you, and we provide the opportunity for you to earn rewards while sharing your opinions._**
 
-***Website***
+***Mainnet***
 https://qstn.us
+
+***Testnet***
+https://testnet.qstnus.com
 
 ***Business Demo***
 https://drive.google.com/file/d/13xazUCDOVFUpGGrDff0YnXcdu9DXWT8D/view?usp=drive_link
